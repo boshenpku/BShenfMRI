@@ -1,0 +1,116 @@
+func_path= '/data2/KangGuanlan/kgl_cnu_data/EXP1_reward_happy/exp1_1stLevel_PPI_20150708';%PPI path
+SubList = dir(fullfile(func_path,'exp1sub*'));
+contrast_dir = {};
+data_source = '/data2/KangGuanlan/kgl_cnu_data/EXP1_reward_happy/exp1dicom';%NIFTI path
+
+for subn=1:length(SubList)
+
+	Data1_s=[];
+    Data2_s=[];
+    Data3_s = [];
+
+    
+    clear jobs;
+
+    res_path=fullfile(func_path,SubList(subn).name,'/PPI/lFusi/reh-ren')
+    if ~exist(res_path)
+    mkdir(res_path);
+    end
+%    delete([res_path,'/SPM.mat']);
+    
+    
+%     run1dir = dir(fullfile(data_source,SubList(subn).name,'geservice','*8CH_CI1*'));
+    run1dir = dir(fullfile(data_source,SubList(subn).name,'*run1*'));
+    run2dir = dir(fullfile(data_source,SubList(subn).name,'*run2*'));
+    run3dir = dir(fullfile(data_source,SubList(subn).name,'*run3*'));
+    
+    display(['extracting data from ',SubList(subn).name,'...']);
+    
+    data_path1= fullfile(data_source,SubList(subn).name,run1dir.name);
+    data_path2= fullfile(data_source,SubList(subn).name,run2dir.name);
+    data_path3= fullfile(data_source,SubList(subn).name,run3dir.name);
+   
+
+    Data1_s=spm_select('FPList', data_path1, '^sw.*\.img$'); % file
+    Data2_s=spm_select('FPList', data_path2, '^sw.*\.img$');
+    Data3_s=spm_select('FPList', data_path3, '^sw.*\.img$');
+    
+    %_____________________SPECIFY 1ST-LEVEL_____________________
+	jobs{1}.stats{1}.fmri_spec.dir={res_path};
+
+    jobs{1}.stats{1}.fmri_spec.timing.units='secs';
+	jobs{1}.stats{1}.fmri_spec.timing.RT=2;
+	jobs{1}.stats{1}.fmri_spec.timing.fmri_t=33;
+	jobs{1}.stats{1}.fmri_spec.timing.fmri_t0=1;
+    %_______Data and Design: Session1_______
+      %____________________LOAD MOTION PARA______________
+      
+    mfilt='^rp_.*\.txt$';
+	mfname1 = spm_select ('List',data_path1,mfilt);
+    mfname2 = spm_select ('List',data_path2,mfilt);
+    mfname3 = spm_select ('List',data_path3,mfilt);
+
+    move1 = fullfile(data_path1,mfname1);
+    move2 = fullfile(data_path2,mfname2);
+    move3 = fullfile(data_path3,mfname3);
+
+    PPI_file1 = [res_path,'/PPI_PPI_lFusi_reh-ren1.mat'];
+    PPI_file2 = [res_path,'/PPI_PPI_lFusi_reh-ren2.mat'];
+    PPI_file3 = [res_path,'/PPI_PPI_lFusi_reh-ren3.mat'];
+    
+    %%%%%%%run1
+    load (PPI_file1);    
+    jobs{1}.stats{1}.fmri_spec.sess(1).scans=cellstr(Data1_s);
+    jobs{1}.stats{1}.fmri_spec.sess(1).regress(1).name = 'PPI';
+    jobs{1}.stats{1}.fmri_spec.sess(1).regress(1).val  = PPI.ppi;
+    jobs{1}.stats{1}.fmri_spec.sess(1).regress(2).name = 'lFusi';
+    jobs{1}.stats{1}.fmri_spec.sess(1).regress(2).val  = PPI.Y;
+    jobs{1}.stats{1}.fmri_spec.sess(1).regress(3).name = 'reh-ren';
+    jobs{1}.stats{1}.fmri_spec.sess(1).regress(3).val  = PPI.P;
+    
+    % 	jobs{1}.stats{1}.fmri_spec=struct('fact',{},'levels',{});
+    jobs{1}.stats{1}.fmri_spec.sess(1).multi_reg=cellstr(move1);
+    
+    %%%%%%run2
+    load (PPI_file2);    
+    jobs{1}.stats{1}.fmri_spec.sess(2).scans=cellstr(Data2_s);
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(1).name = 'PPI';
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(1).val  = PPI.ppi;
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(2).name = 'lFusi';
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(2).val  = PPI.Y;
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(3).name = 'reh-ren';
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(3).val  = PPI.P;
+    
+    
+    % 	jobs{1}.stats{1}.fmri_spec=struct('fact',{},'levels',{});
+    jobs{1}.stats{1}.fmri_spec.sess(2).multi_reg=cellstr(move2);
+    
+    %%%%%%run3
+    load (PPI_file3);    
+    jobs{1}.stats{1}.fmri_spec.sess(2).scans=cellstr(Data3_s);
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(1).name = 'PPI';
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(1).val  = PPI.ppi;
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(2).name = 'lFusi';
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(2).val  = PPI.Y;
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(3).name = 'reh-ren';
+    jobs{1}.stats{1}.fmri_spec.sess(2).regress(3).val  = PPI.P;
+    
+    
+    % 	jobs{1}.stats{1}.fmri_spec=struct('fact',{},'levels',{});
+    jobs{1}.stats{1}.fmri_spec.sess(2).multi_reg=cellstr(move3);
+    
+    
+ 	jobs{1}.stats{1}.fmri_spec.bases.hrf=struct('derivs',[1 0]); %hrf [0 0]
+    jobs{1}.stats{1}.fmri_spec.volt=1;
+	jobs{1}.stats{1}.fmri_spec.global='None';
+    jobs{1}.stats{1}.fmri_spec.mask={''};
+	jobs{1}.stats{1}.fmri_spec.cvi='AR(1)';
+
+
+	%_____________________ESTIMATE_____________________
+	jobs{1}.stats{2}.fmri_est.spmmat={[res_path,'/','SPM.mat']};
+  	jobs{1}.stats{2}.fmri_est.method.Classical=1;
+    
+	spm_jobman('run',jobs)
+    display('mission complete!!! congratulation!')
+end
